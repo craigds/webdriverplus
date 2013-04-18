@@ -1,5 +1,6 @@
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.remote.webelement import WebElement as _WebElement
+from selenium.webdriver.support.select import Select
 #from selenium.webdriver.common.action_chains import ActionChains
 
 from webdriverplus.selectors import SelectorMixin
@@ -155,21 +156,8 @@ class WebElement(SelectorMixin, _WebElement):
     def value(self):
         return self.get_attribute('value')
 
-    @property
     def is_checked(self):
         return self.get_attribute('checked') is not None
-
-    @property
-    def is_selected(self):
-        return super(WebElement, self).is_selected()
-
-    @property
-    def is_displayed(self):
-        return super(WebElement, self).is_displayed()
-
-    @property
-    def is_enabled(self):
-        return super(WebElement, self).is_enabled()
 
     @property
     def inner_html(self):
@@ -238,12 +226,39 @@ class WebElement(SelectorMixin, _WebElement):
         #ActionChains(self._parent).move_to_element(self).perform()
 
     def check(self):
-        if not self.is_checked:
+        if not self.is_checked():
             self.click()
 
     def uncheck(self):
-        if self.is_checked:
+        if self.is_checked():
             self.click()
+
+    def get_select_object(self):
+        return Select(self)
+
+    def select_option(self, value=None, text=None, index=None):
+        if len(filter(lambda x: x is not None, (value, text, index))) != 1:
+            raise ValueError("You must supply exactly one of (value, text, index) kwargs")
+
+        select = self.get_select_object()
+        if value is not None:
+            select.select_by_value(value)
+        elif text is not None:
+            select.select_by_visible_text(text)
+        else:
+            select.select_by_index(index)
+
+    def deselect_option(self, value=None, text=None, index=None):
+        if len(filter(lambda x: x is not None, (value, text, index))) != 1:
+            raise ValueError("You must supply exactly one of (value, text, index) kwargs")
+
+        select = self.get_select_object()
+        if value is not None:
+            select.deselect_by_value(value)
+        elif text is not None:
+            select.deselect_by_visible_text(text)
+        else:
+            select.deselect_by_index(index)
 
     def __repr__(self):
         try:

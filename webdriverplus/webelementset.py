@@ -77,6 +77,15 @@ class WebElementSet(SelectorMixin, OrderedSet):
         self._first.uncheck()
         return self
 
+    def get_select_object(self):
+        return self._first.get_select_object()
+
+    def select_option(self, value=None, text=None, index=None):
+        return self._first.select_option(value=value, text=text, index=index)
+
+    def deselect_option(self, value=None, text=None, index=None):
+        return self._first.deselect_option(value=value, text=text, index=index)
+
     def submit(self):
         self._first.submit()
         return self
@@ -89,21 +98,17 @@ class WebElementSet(SelectorMixin, OrderedSet):
     def get_attribute(self, name):
         return self._first.get_attribute(name)
 
-    @property
     def is_selected(self):
-        return self._first.is_selected
+        return self._first.is_selected()
 
-    @property
     def is_enabled(self):
-        return self._first.is_enabled
+        return self._first.is_enabled()
 
-    @property
     def is_displayed(self):
-        return self._first.is_displayed
+        return self._first.is_displayed()
 
-    @property
     def is_checked(self):
-        return self._first.is_checked
+        return self._first.is_checked()
 
     def send_keys(self, *value):
         [elem.send_keys(*value) for elem in self]

@@ -430,14 +430,14 @@ class FormInspectionTests(WebDriverPlusTests):
 
     def test_is_selected(self):
         elem = self.driver.find('form')
-        self.assertEquals(elem.find(text='Walk').is_selected, True)
-        self.assertEquals(elem.find(text='Cycle').is_selected, False)
-        self.assertEquals(elem.find(text='Drive').is_selected, False)
+        self.assertEquals(elem.find(text='Walk').is_selected(), True)
+        self.assertEquals(elem.find(text='Cycle').is_selected(), False)
+        self.assertEquals(elem.find(text='Drive').is_selected(), False)
 
     def test_is_checked(self):
         elem = self.driver.find('form')
-        self.assertEquals(elem.find(value='peanuts').is_checked, False)
-        self.assertEquals(elem.find(value='jam').is_checked, True)
+        self.assertEquals(elem.find(value='peanuts').is_checked(), False)
+        self.assertEquals(elem.find(value='jam').is_checked(), True)
 
 
 class ValueTests(WebDriverPlusTests):
