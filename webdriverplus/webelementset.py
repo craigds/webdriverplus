@@ -1,3 +1,4 @@
+from webdriverplus.deprecation import deprecated_property
 from webdriverplus.orderedset import OrderedSet
 from webdriverplus.selectors import SelectorMixin
 from webdriverplus.wrappers import Style, Attributes
@@ -98,15 +99,19 @@ class WebElementSet(SelectorMixin, OrderedSet):
     def get_attribute(self, name):
         return self._first.get_attribute(name)
 
+    @deprecated_property
     def is_selected(self):
         return self._first.is_selected()
 
+    @deprecated_property
     def is_enabled(self):
         return self._first.is_enabled()
 
+    @deprecated_property
     def is_displayed(self):
         return self._first.is_displayed()
 
+    @deprecated_property
     def is_checked(self):
         return self._first.is_checked()
 

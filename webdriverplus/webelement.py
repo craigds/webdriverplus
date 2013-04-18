@@ -3,6 +3,7 @@ from selenium.webdriver.remote.webelement import WebElement as _WebElement
 from selenium.webdriver.support.select import Select
 #from selenium.webdriver.common.action_chains import ActionChains
 
+from webdriverplus.deprecation import deprecated_property
 from webdriverplus.selectors import SelectorMixin
 from webdriverplus.utils import get_terminal_size
 from webdriverplus.wrappers import Style, Attributes, Size, Location
@@ -156,8 +157,21 @@ class WebElement(SelectorMixin, _WebElement):
     def value(self):
         return self.get_attribute('value')
 
+    @deprecated_property
     def is_checked(self):
         return self.get_attribute('checked') is not None
+
+    @deprecated_property
+    def is_selected(self):
+        return super(WebElement, self).is_selected()
+
+    @deprecated_property
+    def is_displayed(self):
+        return super(WebElement, self).is_displayed()
+
+    @deprecated_property
+    def is_enabled(self):
+        return super(WebElement, self).is_enabled()
 
     @property
     def inner_html(self):
