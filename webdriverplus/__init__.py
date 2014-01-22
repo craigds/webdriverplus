@@ -14,9 +14,12 @@ import os
 import socket
 import subprocess
 import time
-import urllib2
+try:
+    from urllib2 import URLError
+except ImportError:
+    from urllib.error import URLError
 
-VERSION = (0, 1, 3)
+VERSION = (0, 1, 5)
 
 
 def get_version():
@@ -40,7 +43,7 @@ class WebDriver(WebDriverMixin):
         for driver in cls._quit_on_exit:
             try:
                 driver.quit(force=True)
-            except urllib2.URLError:
+            except URLError:
                 pass
 
     @classmethod

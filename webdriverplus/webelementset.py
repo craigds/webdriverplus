@@ -2,6 +2,7 @@ from webdriverplus.deprecation import deprecated_property
 from webdriverplus.orderedset import OrderedSet
 from webdriverplus.selectors import SelectorMixin
 from webdriverplus.wrappers import Style, Attributes
+from webdriverplus.deprecation import deprecated_property
 
 
 class WebElementSet(SelectorMixin, OrderedSet):
@@ -45,6 +46,22 @@ class WebElementSet(SelectorMixin, OrderedSet):
     def text(self):
         return self._first.text
 
+    @deprecated_property
+    def is_selected(self):
+        return self._first.is_selected()
+
+    @deprecated_property
+    def is_enabled(self):
+        return self._first.is_enabled()
+
+    @deprecated_property
+    def is_displayed(self):
+        return self._first.is_displayed()
+
+    @deprecated_property
+    def is_checked(self):
+        return self._first.is_checked()
+
     # Events...
     def click(self):
         self._first.click()
@@ -66,8 +83,12 @@ class WebElementSet(SelectorMixin, OrderedSet):
         self._first.release()
         return self
 
-    def move_to(self):
-        self._first.move_to()
+    def move_to(self, x=0, y=0):
+        self._first.move_to(x, y)
+        return self
+
+    def move_to_and_click(self, *args, **kwargs):
+        self._first.move_to_and_click(*args, **kwargs)
         return self
 
     def check(self):
@@ -99,21 +120,8 @@ class WebElementSet(SelectorMixin, OrderedSet):
     def get_attribute(self, name):
         return self._first.get_attribute(name)
 
-    @deprecated_property
-    def is_selected(self):
-        return self._first.is_selected()
-
-    @deprecated_property
-    def is_enabled(self):
-        return self._first.is_enabled()
-
-    @deprecated_property
-    def is_displayed(self):
-        return self._first.is_displayed()
-
-    @deprecated_property
-    def is_checked(self):
-        return self._first.is_checked()
+    def attr(self, name):
+        return self._first.attr(name)
 
     def send_keys(self, *value):
         [elem.send_keys(*value) for elem in self]
@@ -139,6 +147,10 @@ class WebElementSet(SelectorMixin, OrderedSet):
     def value(self):
         return self._first.value
 
+    @value.setter
+    def value(self, value):
+        self._first.value = value
+
     def value_of_css_property(self, property_name):
         return [elem.value_of_css_property(property_name) for elem in self]
 
@@ -161,6 +173,15 @@ class WebElementSet(SelectorMixin, OrderedSet):
     @property
     def attributes(self):
         return Attributes(self._first)
+
+    def has_class(self, cls):
+        for elem in self:
+            if elem.has_class(cls):
+                return True
+        return False
+
+    def css(self, name, value=None):
+        return self._first.css(name, value)
 
     def javascript(self, script):
         return [elem.javascript(script) for elem in self]
@@ -230,6 +251,15 @@ class WebElementSet(SelectorMixin, OrderedSet):
         for elem in self:
             ret |= elem.siblings()
         return ret.filter(*args, **kwargs)
+
+    def type_keys(self, *args):
+        return self._first.type_keys(*args)
+
+    def select_option(self, value=None, text=None, index=None):
+        return self._first.select_option(value=value, text=text, index=index)
+
+    def deselect_option(self, value=None, text=None, index=None):
+        return self._first.deselect_option(value=value, text=text, index=index)
 
     def __getitem__(self, key):
         if isinstance(key, slice):

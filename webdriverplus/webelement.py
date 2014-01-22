@@ -1,12 +1,17 @@
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.remote.webelement import WebElement as _WebElement
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.select import Select
-#from selenium.webdriver.common.action_chains import ActionChains
 
 from webdriverplus.deprecation import deprecated_property
 from webdriverplus.selectors import SelectorMixin
 from webdriverplus.utils import get_terminal_size
 from webdriverplus.wrappers import Style, Attributes, Size, Location
+
+try:
+    from urllib2 import quote
+except ImportError:
+    from urllib.request import quote
 
 import os
 import sys
@@ -85,6 +90,7 @@ class ParentProxy(object):
         parent does the traversal while allowing _WebElement to use parent
         to access the WebDriver
     """
+
     def __init__(self, _webelement):
         self._webelement = _webelement
 
@@ -157,6 +163,10 @@ class WebElement(SelectorMixin, _WebElement):
     def value(self):
         return self.get_attribute('value')
 
+    @value.setter
+    def value(self, value):
+        self._parent.execute_script('arguments[0].value=unescape(decodeURI("%s"));' % quote(value), self)
+
     @deprecated_property
     def is_checked(self):
         return self.get_attribute('checked') is not None
@@ -209,35 +219,64 @@ class WebElement(SelectorMixin, _WebElement):
     def attributes(self):
         return Attributes(self)
 
+    def attr(self, attribute):
+        return self.get_attribute(attribute)
+
+    def has_class(self, cls):
+        return cls in self.attr('class').split(' ')
+
+    def css(self, name, value=None):
+        if value is None:
+            return getattr(self.style, name)
+        setattr(self.style, name, value)
+        return self
+
     def javascript(self, script):
         script = "return arguments[0].%s;" % script
-        return  self._parent.execute_script(script, self)
+        return self._parent.execute_script(script, self)
 
     def jquery(self, script):
         script = "return $(arguments[0]).%s;" % script
-        return  self._parent.execute_script(script, self)
+        return self._parent.execute_script(script, self)
 
     # Actions...
     # Native events not supported on mac.
     def double_click(self):
-        self._parent.execute_script(simulate_event('dblclick'), self)
-        #ActionChains(self._parent).double_click(self).perform()
+        # self._parent.execute_script(simulate_event('dblclick'), self)
+        ActionChains(self._parent).double_click(super(WebElement, self)).perform()
+        return self
 
     def context_click(self):
-        self._parent.execute_script(simulate_event('click', button=2), self)
-        #ActionChains(self._parent).double_click(self).perform()
+        # self._parent.execute_script(simulate_event('click', button=2), self)
+        ActionChains(self._parent).context_click(super(WebElement, self)).perform()
+        return self
 
     def click_and_hold(self):
-        self._parent.execute_script(simulate_event('mousedown'), self)
-        #ActionChains(self._parent).click_and_hold(self).perform()
+        # self._parent.execute_script(simulate_event('mousedown'), self)
+        ActionChains(self._parent).click_and_hold(super(WebElement, self)).perform()
+        return self
 
     def release(self):
         self._parent.execute_script(simulate_event('mouseup'), self)
-        #ActionChains(self._parent).click_and_hold(self).perform()
+        # ActionChains(self._parent).click_and_hold(super(WebElement, self)).perform()
+        return self
 
-    def move_to(self):
-        self._parent.execute_script(simulate_event('mouseover'), self)
-        #ActionChains(self._parent).move_to_element(self).perform()
+    def move_to(self, x=0, y=0):
+        # self._parent.execute_script(simulate_event('mouseover'), self)
+        if x and y:
+            ActionChains(self._parent).move_to_element_with_offset(super(WebElement, self), x, y).perform()
+        else:
+            ActionChains(self._parent).move_to_element(super(WebElement, self)).perform()
+        return self
+
+    def move_to_and_click(self, x=0, y=0):
+        # self._parent.execute_script(simulate_event('mouseover'), self)
+        if x and y:
+            action_chains = ActionChains(self._parent).move_to_element_with_offset(super(WebElement, self), x, y)
+        else:
+            action_chains = ActionChains(self._parent).move_to_element(super(WebElement, self))
+        action_chains.click().perform()
+        return self
 
     def check(self):
         if not self.is_checked():
@@ -247,14 +286,20 @@ class WebElement(SelectorMixin, _WebElement):
         if self.is_checked():
             self.click()
 
-    def get_select_object(self):
-        return Select(self)
+    # Bug in chrome driver that prevents send_keys to certain elements
+    # so click 1st, clear, then send_keys
+    # https://code.google.com/p/chromedriver/issues/detail?id=290
+    def type_keys(self, *args):
+        self.click()
+        self.clear()
+        self.send_keys(*args)
 
     def select_option(self, value=None, text=None, index=None):
-        if len(filter(lambda x: x is not None, (value, text, index))) != 1:
+        # Python3 filter -> list(filter)
+        if len(list(filter(None, (value, text, index)))) != 1:
             raise ValueError("You must supply exactly one of (value, text, index) kwargs")
 
-        select = self.get_select_object()
+        select = Select(self)
         if value is not None:
             select.select_by_value(value)
         elif text is not None:
@@ -263,10 +308,10 @@ class WebElement(SelectorMixin, _WebElement):
             select.select_by_index(index)
 
     def deselect_option(self, value=None, text=None, index=None):
-        if len(filter(lambda x: x is not None, (value, text, index))) != 1:
+        if len(list(filter(None, (value, text, index)))) != 1:
             raise ValueError("You must supply exactly one of (value, text, index) kwargs")
 
-        select = self.get_select_object()
+        select = Select(self)
         if value is not None:
             select.deselect_by_value(value)
         elif text is not None:
@@ -290,7 +335,7 @@ class WebElement(SelectorMixin, _WebElement):
 
             if len(ret) >= width - 2:
                 ret = ret[:width - 5] + '...'
-            #self.style.backgroundColor = '#f9edbe'
+                #self.style.backgroundColor = '#f9edbe'
             #self.style.borderColor = '#f9edbe'
             #self.style.outline = '1px solid black'
             return ret
